@@ -192,11 +192,13 @@ async function run() {
 
     app.post("/add-asset", verifyToken, verifyHr, async (req, res) => {
       const asset = req.body;
+      console.log(asset.hrId);
+      
       const existingAsset = await assetsCollection.findOne({
         productName: asset.productName,
       });
 
-      if (existingAsset) {
+      if (existingAsset && asset?.hrId === existingAsset?.hrId) {
         // update already existing asset quantity
         const result = await assetsCollection.updateOne(
           { productName: asset.productName },
@@ -204,14 +206,14 @@ async function run() {
         );
 
         if (result.modifiedCount > 0) {
-          console.log("asset quantity updated");
-          res.send("asset quantity updated");
+          console.log("asset quantity updated", asset.hrId);
+          res.send("asset quantity updated",);
         } else {
           console.log("not update made to a new asset");
         }
       } else {
-        const result = await assetsCollection.insertOne(asset);
-        res.send(result);
+        // const result = await assetsCollection.insertOne(asset);
+        // res.send(result);
       }
     });
 
