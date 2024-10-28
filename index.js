@@ -212,8 +212,8 @@ async function run() {
           console.log("not update made to a new asset");
         }
       } else {
-        // const result = await assetsCollection.insertOne(asset);
-        // res.send(result);
+        const result = await assetsCollection.insertOne(asset);
+        res.send(result);
       }
     });
 
