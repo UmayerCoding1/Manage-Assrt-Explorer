@@ -19,7 +19,8 @@ app.use(cors({
   origin: [
     
     'http://localhost:5173',
-    'https://mae-auth.web.app'
+    'https://mae-auth.web.app',
+    'https://mae-auth.firebaseapp.com'
 
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Adjust methods as needed
