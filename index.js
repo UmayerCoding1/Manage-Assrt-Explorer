@@ -8,6 +8,12 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
+// {
+//   origin: ['http://localhost:5173'],
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Adjust methods as needed
+//   credentials: true,
+//   allowedHeaders: ['Content-Type', 'Authorization']
+// }
 // middleware
 app.use(cors({
   origin: ['http://localhost:5173'],
@@ -101,7 +107,7 @@ async function run() {
     // get hr role
     app.get("/hr-role", async (req, res) => {
       const query = req.query.email;
-     console.log(query);
+    //  console.log(query);
      
       const result = await hrCollection.find({ email: query }).toArray();
       res.send(result);
@@ -192,11 +198,13 @@ async function run() {
 
     app.post("/add-asset", verifyToken, verifyHr, async (req, res) => {
       const asset = req.body;
-      console.log(asset.hrId);
+      console.log(asset || 'as');
       
       const existingAsset = await assetsCollection.findOne({
         productName: asset.productName,
       });
+      console.log(existingAsset || 'ex');
+      
 
       if (existingAsset && asset?.hrId === existingAsset?.hrId) {
         // update already existing asset quantity
@@ -320,6 +328,7 @@ async function run() {
       const findAsset = {_id: new ObjectId(productId)};
       const asset = await assetsCollection.findOne(findAsset);
       const filterAsset = await assetRequestCollection.findOne(filter);
+     console.log('ap');
      
       const updateDov = {
         $set: {
