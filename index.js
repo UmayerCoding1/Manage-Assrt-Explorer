@@ -80,13 +80,13 @@ async function run() {
 
     //  verifyHr
     const verifyHr = async (req, res, next) => {
-      // const email = req.decode.email;
-      // const query = { email: email };
-      // const user = await hrCollection.findOne(query);
-      // const isHr = user?.role === "hr";
-      // if (!isHr) {
-      //   return res.status(403).send({ message: "forbidden access" });
-      // }
+      const email = req.decode.email;
+      const query = { email: email };
+      const user = await hrCollection.findOne(query);
+      const isHr = user?.role === "hr";
+      if (!isHr) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
       next();
     };
 
