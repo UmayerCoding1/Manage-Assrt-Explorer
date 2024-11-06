@@ -18,7 +18,7 @@ const port = process.env.PORT || 5000;
 app.use(cors({
   origin: [
     
-    'http://localhost:5173',
+    'http://localhost:5174',
     'https://mae-auth.web.app',
     'https://mae-auth.firebaseapp.com'
 
