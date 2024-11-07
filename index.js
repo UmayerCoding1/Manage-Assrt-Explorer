@@ -15,18 +15,19 @@ const port = process.env.PORT || 5000;
 //   allowedHeaders: ['Content-Type', 'Authorization']
 // }
 // middleware
-app.use(cors({
-  origin: [
-    
-    'http://localhost:5174',
-    'https://mae-auth.web.app',
-    'https://mae-auth.firebaseapp.com'
-
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Adjust methods as needed
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://mae-auth.web.app",
+      "https://mae-auth.firebaseapp.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Adjust methods as needed
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -53,8 +54,12 @@ async function run() {
     const hrCollection = client.db("MAE").collection("hr");
     const employeeCollection = client.db("MAE").collection("employee");
     const assetsCollection = client.db("MAE").collection("assets");
-    const assetRequestCollection = client.db("MAE").collection("em_Asset_Request");
-    const assetReturnedCollection = client.db("MAE").collection("asset_returned");
+    const assetRequestCollection = client
+      .db("MAE")
+      .collection("em_Asset_Request");
+    const assetReturnedCollection = client
+      .db("MAE")
+      .collection("asset_returned");
 
     // jwt related api
 
@@ -113,8 +118,8 @@ async function run() {
     // get hr role
     app.get("/hr-role", async (req, res) => {
       const query = req.query.email;
-    //  console.log(query);
-     
+      //  console.log(query);
+
       const result = await hrCollection.find({ email: query }).toArray();
       res.send(result);
     });
@@ -204,13 +209,12 @@ async function run() {
 
     app.post("/add-asset", verifyToken, verifyHr, async (req, res) => {
       const asset = req.body;
-      console.log(asset || 'as');
-      
+      console.log(asset || "as");
+
       const existingAsset = await assetsCollection.findOne({
         productName: asset.productName,
       });
-      console.log(existingAsset || 'ex');
-      
+      console.log(existingAsset || "ex");
 
       if (existingAsset && asset?.hrId === existingAsset?.hrId) {
         // update already existing asset quantity
@@ -221,7 +225,7 @@ async function run() {
 
         if (result.modifiedCount > 0) {
           console.log("asset quantity updated", asset.hrId);
-          res.send("asset quantity updated",);
+          res.send("asset quantity updated");
         } else {
           console.log("not update made to a new asset");
         }
@@ -304,12 +308,11 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const findAsset = { _id: new ObjectId(productId) };
       const asset = await assetsCollection.findOne(findAsset);
-      
 
       const updateDoc = {
         $set: {
           status: "approved",
-          approved_Date: new Date().toISOString().split("T")[0],
+          approved_Date: new Date(),
         },
       };
 
@@ -324,49 +327,53 @@ async function run() {
       }
 
       const result = await assetRequestCollection.updateOne(filter, updateDoc);
+      console.log(result);
+
       res.send(result);
     });
 
-    app.put("/asset-request/:id", async(req,res) => {
+    app.put("/asset-request/:id", async (req, res) => {
       const id = req.params.id;
-      const {productId} = req.query;
-      const filter = {_id: new ObjectId(id)};
-      const findAsset = {_id: new ObjectId(productId)};
+      const { productId } = req.query;
+      const filter = { _id: new ObjectId(id) };
+      const findAsset = { _id: new ObjectId(productId) };
       const asset = await assetsCollection.findOne(findAsset);
       const filterAsset = await assetRequestCollection.findOne(filter);
-     console.log('ap');
-     
+      console.log("ap");
+
       const updateDov = {
         $set: {
-          status: 'returned ',
-        }
+          status: "returned ",
+        },
       };
 
-      if(asset.quantity){
+      if (asset.quantity) {
         const updateAssetDoc = {
-          $inc: {quantity: +1},
+          $inc: { quantity: +1 },
         };
-        const updateAsset  = await assetsCollection.updateOne(findAsset, updateAssetDoc);
-        const assetReturned = await assetReturnedCollection.insertOne(filterAsset);
+        const updateAsset = await assetsCollection.updateOne(
+          findAsset,
+          updateAssetDoc
+        );
+        const assetReturned = await assetReturnedCollection.insertOne(
+          filterAsset
+        );
       }
 
       const result = await assetRequestCollection.updateOne(filter, updateDov);
       const assetDelete = await assetRequestCollection.deleteOne(filter);
       res.send(result);
-      
-
-    })
+    });
 
     //  employee api
     // get all employee data
     app.get("/employee", verifyToken, verifyHr, async (req, res) => {
       // const l =await employeeCollection.estimatedDocumentCount();
-     const {hrId} = req.query;
-     
-     
-      const result = await employeeCollection.find({hrId: hrId}).toArray();
+      const { hrId } = req.query;
+
+      const result = await employeeCollection.find({ hrId: hrId }).toArray();
       // console.log(result);
-      
+
       res.send(result);
     });
 
@@ -437,6 +444,16 @@ async function run() {
       res.send(emResult);
     });
 
+    app.delete("/employee/:id", async (req, res) => {
+      const id = req.params.id;
+      const { email } = req.query;
+      const employee = { _id: new ObjectId(id) };
+      const user = await userCollection.deleteOne({ email: email });
+      const employeeFind = await employeeCollection.deleteOne(employee);
+
+      res.send(employeeFind);
+    });
+
     // hr payment intent
     app.post("/create-payment-intent", async (req, res) => {
       const { memberPackage } = req.body;
@@ -452,6 +469,20 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    app.get("/hr-manage-count", verifyToken, verifyHr, async (req, res) => {
+      const { hrId } = req.query;
+      // const id = query.toString();
+
+      const emFilter = await employeeCollection.find({ hrId: hrId }).toArray();
+      const assetFilter = await assetsCollection.find({ hrId: hrId }).toArray();
+      const count = {
+        employeeCount: emFilter.length,
+        assetCount: assetFilter.length,
+      };
+
+      res.send(count);
     });
 
     // Send a ping to confirm a successful connection
