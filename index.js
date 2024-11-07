@@ -60,6 +60,7 @@ async function run() {
     const assetReturnedCollection = client
       .db("MAE")
       .collection("asset_returned");
+    const approvedListCollection = client.db('MAE').collection('approved_list');
 
     // jwt related api
 
@@ -312,7 +313,6 @@ async function run() {
       const updateDoc = {
         $set: {
           status: "approved",
-          approved_Date: new Date(),
         },
       };
 
@@ -344,6 +344,7 @@ async function run() {
       const updateDov = {
         $set: {
           status: "returned ",
+          returned_date: new Date()
         },
       };
 
